@@ -59,7 +59,7 @@ public class ShopService {
             shopItem.setActive(false);
         shopItemRepository.save(shopItem);
 
-        userService.spendPoints(userId, shopItem.getPricePoints());
+        userService.spendPoints(userId, shopItem.getPricePoints(), "Purchase: " + shopItem.getName());
 
         Purchase purchase = new Purchase();
         purchase.setUser(user);

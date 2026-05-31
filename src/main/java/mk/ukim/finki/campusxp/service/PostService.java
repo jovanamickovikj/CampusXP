@@ -36,7 +36,7 @@ public class PostService {
         post.setPointsAwarded(points);
 
         Post saved = postRepository.save(post);
-        userService.addPoints(userId, points);
+        userService.addPoints(userId, points, "Post: " + title);
         return saved;
     }
 

@@ -2,7 +2,9 @@ package mk.ukim.finki.campusxp.service;
 
 import mk.ukim.finki.campusxp.exception.BadRequestException;
 import mk.ukim.finki.campusxp.exception.ResourceNotFoundException;
+import mk.ukim.finki.campusxp.model.PointTransaction;
 import mk.ukim.finki.campusxp.model.User;
+import mk.ukim.finki.campusxp.repository.PointTransactionRepository;
 import mk.ukim.finki.campusxp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +14,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PointTransactionRepository pointTransactionRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PointTransactionRepository pointTransactionRepository) {
         this.userRepository = userRepository;
+        this.pointTransactionRepository = pointTransactionRepository;
     }
 
     public List<User> getAllUsers(){
@@ -49,19 +53,37 @@ public class UserService {
         return user;
     }
 
-    public void spendPoints(Long userId, Integer points){
+    public void spendPoints(Long userId, Integer points, String reason){
         User user = findById(userId);
         if(user.getCurrentPoints() < points){
             throw new BadRequestException("Not enough points");
         }
         user.setCurrentPoints(user.getCurrentPoints() - points);
         userRepository.save(user);
+
+        PointTransaction pointTransaction = new PointTransaction();
+        pointTransaction.setUser(user);
+        pointTransaction.setAmount(points);
+        pointTransaction.setType(PointTransaction.TransactionType.SPEND);
+        pointTransaction.setReason(reason);
+        pointTransactionRepository.save(pointTransaction);
     }
 
-    public void addPoints(Long userId, Integer points){
+    public void addPoints(Long userId, Integer points, String reason){
         User user = findById(userId);
         user.setCurrentPoints(user.getCurrentPoints() + points);
         user.setTotalEarnedPoints(user.getTotalEarnedPoints() + points);
         userRepository.save(user);
+
+        PointTransaction pointTransaction = new PointTransaction();
+        pointTransaction.setUser(user);
+        pointTransaction.setAmount(points);
+        pointTransaction.setType(PointTransaction.TransactionType.EARNED);
+        pointTransaction.setReason(reason);
+        pointTransactionRepository.save(pointTransaction);
+    }
+
+    public List<PointTransaction> getPointHistory(Long userId) {
+        return pointTransactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }

@@ -102,4 +102,14 @@ public class Mapper {
                 toUserSummary(purchase.getUser())
         );
     }
+
+    public PointTransactionResponse toPointTransaction(PointTransaction tx) {
+        return new PointTransactionResponse(
+                tx.getId(),
+                tx.getAmount(),
+                tx.getType(),
+                tx.getReason(),
+                tx.getCreatedAt()
+        );
+    }
 }

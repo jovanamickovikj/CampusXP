@@ -1,6 +1,7 @@
 package mk.ukim.finki.campusxp.controller;
 
 import mk.ukim.finki.campusxp.dto.Mapper;
+import mk.ukim.finki.campusxp.dto.response.PointTransactionResponse;
 import mk.ukim.finki.campusxp.dto.response.UserProfileResponse;
 import mk.ukim.finki.campusxp.dto.response.UserSummaryResponse;
 import mk.ukim.finki.campusxp.model.Badge;
@@ -67,6 +68,13 @@ public class UserController {
                 request.fullName(),
                 request.role()
         ));
+    }
+
+    @GetMapping("/{id}/points/history")
+    public List<PointTransactionResponse> getPointHistory(@PathVariable Long id) {
+        return userService.getPointHistory(id).stream()
+                .map(mapper::toPointTransaction)
+                .toList();
     }
 
     public record CreateUserRequest(
