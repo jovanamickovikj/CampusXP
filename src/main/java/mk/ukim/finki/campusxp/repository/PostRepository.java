@@ -7,7 +7,14 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PostRepository extends JpaRepository<Post,Long> {
-    List<Post> findByUserIdOrderByCreatedAtDesc(Long userId);
-    List<Post> findByUserIdInOrderByCreatedAtDesc(List<Long> userIds);
+public interface PostRepository extends JpaRepository<Post, Long> {
+
+    List<Post> findByUserIdAndArchivedFalseOrderByCreatedAtDesc(Long userId);
+
+    List<Post> findByUserIdInAndArchivedFalseOrderByCreatedAtDesc(List<Long> userIds);
+
+    List<Post> findByUserIdAndArchivedTrueOrderByCreatedAtDesc(Long userId);
+
+    /** Efficient count — avoids loading Post entities into memory. */
+    long countByUserIdAndArchivedFalse(Long userId);
 }

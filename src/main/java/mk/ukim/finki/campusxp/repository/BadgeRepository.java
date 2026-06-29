@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BadgeRepository extends JpaRepository<Badge, Integer> {
+public interface BadgeRepository extends JpaRepository<Badge, Long> {
     boolean existsByName(String name);
-    Badge findById(Long badgeId);
 }

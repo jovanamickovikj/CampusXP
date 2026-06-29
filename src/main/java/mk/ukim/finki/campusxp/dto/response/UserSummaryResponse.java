@@ -7,7 +7,10 @@ public record UserSummaryResponse(
         String username,
         String fullName,
         String avatarUrl,
+        String bio,
         int currentPoints,
         int totalEarnedPoints,
-        User.Role role
+        User.Role role,
+        User.AccountType accountType,
+        User.VerificationStatus verificationStatus
 ) {}

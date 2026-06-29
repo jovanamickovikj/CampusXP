@@ -28,6 +28,7 @@ public class PointTransaction {
     @Column(nullable = false)
     private String reason;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionType type;
 

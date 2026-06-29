@@ -15,9 +15,12 @@ public class Mapper {
                 user.getUsername(),
                 user.getFullName(),
                 user.getAvatarUrl(),
+                user.getBio(),
                 user.getCurrentPoints(),
                 user.getTotalEarnedPoints(),
-                user.getRole()
+                user.getRole(),
+                user.getAccountType(),
+                user.getVerificationStatus()
         );
     }
 
@@ -31,19 +34,26 @@ public class Mapper {
         );
     }
 
-    public UserProfileResponse toUserProfile(User user, List<Badge> badges, int postCount, int friendCount){
+    public UserProfileResponse toUserProfile(User user, List<Badge> badges,
+                                             int postCount, int friendCount,
+                                             int followingCount, int followersCount) {
         List<BadgeResponse> badgeResponses = badges.stream().map(this::toBadge).toList();
         return new UserProfileResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getFullName(),
                 user.getAvatarUrl(),
+                user.getBio(),
                 user.getCurrentPoints(),
                 user.getTotalEarnedPoints(),
                 user.getRole(),
+                user.getAccountType(),
+                user.getVerificationStatus(),
                 badgeResponses,
                 postCount,
-                friendCount
+                friendCount,
+                followingCount,
+                followersCount
         );
     }
 
@@ -55,13 +65,14 @@ public class Mapper {
                 post.getFileUrl(),
                 post.getPostType(),
                 post.getPointsAwarded(),
+                post.isArchived(),
                 post.getCreatedAt(),
                 toUserSummary(post.getUser())
         );
     }
 
     public FriendshipResponse toFriendship(Friendship friendship, Long currentUserId){
-        UserSummaryResponse otherUser = friendship.getRequester().equals(currentUserId)
+        UserSummaryResponse otherUser = friendship.getRequester().getId().equals(currentUserId)
                 ? toUserSummary(friendship.getReceiver())
                 : toUserSummary(friendship.getRequester());
 
@@ -81,15 +92,19 @@ public class Mapper {
         );
     }
 
-    public ShopItemResponse toShopItem(ShopItem shopItem){
+    public ShopItemResponse toShopItem(ShopItem item){
         return new ShopItemResponse(
-                shopItem.getId(),
-                shopItem.getName(),
-                shopItem.getDescription(),
-                shopItem.getImageUrl(),
-                shopItem.getPricePoints(),
-                shopItem.getQuantity(),
-                shopItem.isActive()
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getImageUrl(),
+                item.getPricePoints(),
+                item.getQuantity(),
+                item.getInitialQuantity(),
+                item.getPurchaseCount(),
+                item.isActive(),
+                item.getCreatedBy() != null ? item.getCreatedBy().getId() : null,
+                item.getCreatedBy() != null ? item.getCreatedBy().getUsername() : null
         );
     }
 
@@ -99,7 +114,9 @@ public class Mapper {
                 toShopItem(purchase.getShopItem()),
                 purchase.getPointsPaid(),
                 purchase.getPurchasedAt(),
-                toUserSummary(purchase.getUser())
+                toUserSummary(purchase.getUser()),
+                purchase.isUsed(),
+                purchase.getUsedAt()
         );
     }
 

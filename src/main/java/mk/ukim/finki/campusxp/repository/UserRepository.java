@@ -13,4 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     List<User> findAllByOrderByTotalEarnedPointsDesc();
+
+    /** All shop manager applications waiting for admin review. */
+    List<User> findByAccountTypeAndVerificationStatusOrderByIdAsc(
+            User.AccountType accountType, User.VerificationStatus verificationStatus);
 }

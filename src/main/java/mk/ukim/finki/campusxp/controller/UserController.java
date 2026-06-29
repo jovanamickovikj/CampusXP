@@ -1,5 +1,6 @@
 package mk.ukim.finki.campusxp.controller;
 
+import jakarta.validation.Valid;
 import mk.ukim.finki.campusxp.dto.Mapper;
 import mk.ukim.finki.campusxp.dto.response.PointTransactionResponse;
 import mk.ukim.finki.campusxp.dto.response.UserProfileResponse;
@@ -7,80 +8,114 @@ import mk.ukim.finki.campusxp.dto.response.UserSummaryResponse;
 import mk.ukim.finki.campusxp.model.Badge;
 import mk.ukim.finki.campusxp.model.User;
 import mk.ukim.finki.campusxp.model.UserBadge;
-import mk.ukim.finki.campusxp.repository.FriendshipRepository;
 import mk.ukim.finki.campusxp.service.BadgeService;
+import mk.ukim.finki.campusxp.service.FollowService;
 import mk.ukim.finki.campusxp.service.FriendshipService;
 import mk.ukim.finki.campusxp.service.PostService;
 import mk.ukim.finki.campusxp.service.UserService;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
 public class UserController {
 
     private final UserService userService;
-    private final BadgeService  badgeService;
+    private final BadgeService badgeService;
     private final PostService postService;
     private final FriendshipService friendshipService;
+    private final FollowService followService;
     private final Mapper mapper;
 
-    public UserController(UserService userService, BadgeService badgeService, PostService postService, FriendshipService friendshipService, Mapper mapper) {
-        this.userService = userService;
-        this.badgeService = badgeService;
-        this.postService = postService;
+    public UserController(UserService userService, BadgeService badgeService,
+                          PostService postService, FriendshipService friendshipService,
+                          FollowService followService, Mapper mapper) {
+        this.userService       = userService;
+        this.badgeService      = badgeService;
+        this.postService       = postService;
         this.friendshipService = friendshipService;
-        this.mapper = mapper;
+        this.followService     = followService;
+        this.mapper            = mapper;
     }
 
     @GetMapping
     public List<UserSummaryResponse> getUsers() {
-        return userService.getAllUsers()
-                .stream()
-                .map(mapper::toUserSummary)
-                .toList();
+        return userService.getAllUsers().stream().map(mapper::toUserSummary).toList();
     }
 
     @GetMapping("/{id}")
-    public UserSummaryResponse getUser(@PathVariable long id) {
+    public UserSummaryResponse getUser(@PathVariable Long id) {
         return mapper.toUserSummary(userService.findById(id));
     }
 
-    @PostMapping("/{id}/profile")
-    public UserProfileResponse getProfile(@PathVariable Long id){
+    @GetMapping("/{id}/profile")
+    public UserProfileResponse getProfile(@PathVariable Long id) {
         User user = userService.findById(id);
-        List<Badge> badges = badgeService.getAllBadgesForUser(user.getId()).stream()
+        List<Badge> badges = badgeService.getAllBadgesForUser(id).stream()
                 .map(UserBadge::getBadge).toList();
-        int postCount = postService.getPostsForUser(user.getId()).size();
-        int friendCount = friendshipService.getFriends(id).size();
 
-        return mapper.toUserProfile(user, badges, postCount, friendCount);
+        // Use count queries — avoids loading all entities just to call .size()
+        int postCount      = (int) postService.countPostsForUser(id);
+        int friendCount    = 0;
+        int followingCount = 0;
+        int followersCount = 0;
+
+        if (user.getAccountType() == User.AccountType.USER) {
+            friendCount    = friendshipService.getFriends(id).size();
+            followingCount = (int) followService.getFollowingCount(id);
+        } else if (user.getAccountType() == User.AccountType.SHOP_MANAGER) {
+            followersCount = (int) followService.getFollowersCount(id);
+        }
+
+        return mapper.toUserProfile(user, badges, postCount, friendCount, followingCount, followersCount);
     }
 
-    @PostMapping
-    public UserSummaryResponse createUser(@RequestBody CreateUserRequest request) {
-        return mapper.toUserSummary(userService.createUser(
-                request.username(),
-                request.email(),
-                request.fullName(),
-                request.role()
-        ));
+    @PutMapping("/{id}")
+    public UserSummaryResponse updateUser(@PathVariable Long id,
+                                          @Valid @RequestBody UpdateUserRequest request) {
+        return mapper.toUserSummary(
+                userService.updateUser(id,
+                        request.username(), request.fullName(), request.email(),
+                        request.avatarUrl(), request.bio()));
     }
 
     @GetMapping("/{id}/points/history")
     public List<PointTransactionResponse> getPointHistory(@PathVariable Long id) {
-        return userService.getPointHistory(id).stream()
-                .map(mapper::toPointTransaction)
-                .toList();
+        return userService.getPointHistory(id).stream().map(mapper::toPointTransaction).toList();
     }
 
-    public record CreateUserRequest(
+    // ── Admin: shop manager approvals ─────────────────────────────────────────
+
+    @GetMapping("/pending-managers")
+    public List<UserSummaryResponse> getPendingManagers() {
+        return userService.getPendingShopManagers().stream().map(mapper::toUserSummary).toList();
+    }
+
+    @PutMapping("/{id}/verify")
+    public UserSummaryResponse verifyShopManager(@PathVariable Long id,
+                                                  @RequestBody VerifyRequest request) {
+        return mapper.toUserSummary(userService.verifyShopManager(id, request.status()));
+    }
+
+    // ── Admin: user management ────────────────────────────────────────────────
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+    }
+
+    // ── Request records ───────────────────────────────────────────────────────
+
+    public record UpdateUserRequest(
             String username,
-            String email,
             String fullName,
-            User.Role role
+            String email,
+            String avatarUrl,
+            String bio
     ) {}
+
+    public record VerifyRequest(User.VerificationStatus status) {}
 }

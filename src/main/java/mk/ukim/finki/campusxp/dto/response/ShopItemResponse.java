@@ -7,6 +7,9 @@ public record ShopItemResponse(
         String imageUrl,
         int pricePoints,
         int quantity,
-        boolean active
-) {
-}
+        int initialQuantity,
+        int purchaseCount,
+        boolean active,
+        Long createdById,
+        String createdByUsername
+) {}

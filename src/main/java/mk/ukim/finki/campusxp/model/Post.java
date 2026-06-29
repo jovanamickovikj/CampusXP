@@ -24,14 +24,18 @@ public class Post {
     @Column(length = 2000)
     private String description;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String fileUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PostType postType;
 
     @Column(nullable = false)
     private int pointsAwarded;
+
+    @Column(nullable = false)
+    private boolean archived = false;
 
     @Column(nullable = false)
     private LocalDateTime  createdAt =  LocalDateTime.now();

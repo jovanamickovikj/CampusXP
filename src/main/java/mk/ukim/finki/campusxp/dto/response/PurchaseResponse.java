@@ -7,6 +7,7 @@ public record PurchaseResponse(
         ShopItemResponse shopItem,
         int pointsPaid,
         LocalDateTime purchasedAt,
-        UserSummaryResponse user
-) {
-}
+        UserSummaryResponse user,
+        boolean used,
+        LocalDateTime usedAt
+) {}

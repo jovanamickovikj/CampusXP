@@ -11,6 +11,7 @@ public record PostResponse(
         String fileUrl,
         Post.PostType postType,
         int pointsAwarded,
+        boolean archived,
         LocalDateTime createdAt,
         UserSummaryResponse author
 ) {}
